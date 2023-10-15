@@ -1,30 +1,22 @@
 "use client";
 
 import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { useStoreModal } from "@/hooks/use-store-modal";
 import { Modal } from "@/components/ui/modal";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import toast from "react-hot-toast";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import toast from "react-hot-toast";
+
 
 const formSchema = z.object({
-  name: z.string().min(1, {
-    message: "Insira o nome da loja.",
-  }),
-})
+  name: z.string().min(1),
+});
 
 export const StoreModal = () => {
   const storeModal = useStoreModal();
@@ -33,60 +25,62 @@ export const StoreModal = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+    },
   });
 
-const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      const response = await axios.post("/api/stores", values);
-
-      toast.success("Loja criada com sucesso!");
+      toast.loading('Adicionando loja... 🚀', { id: '1'});
+      const response = await axios.post('/api/stores', values);
+      toast.success('Loja adicionada com sucesso! 🎉', { id: '1'});
+      console.log(response.data);
     } catch (error) {
-      toast.error("Ocorreu algum erro.");
+      toast.error('Alguma coisa deu errado 😢');
+      console.log(error);
     } finally {
       setLoading(false);
     }
   }
 
-  return (
+  return(
     <Modal
-      title="Store form"
-      description="Store form description"
-      isOpen={storeModal.isOpen}
-      onClose={storeModal.onClose}
-    >
-      <div>
-        <div className="space-y-4 pt-2 pb-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="text" 
-                        placeholder="E-commerce" 
-                        {...field}
-                        disabled={loading}  
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex items-center justify-end pt-6 gap-3">
-                <Button variant={"secondary"} onClick={storeModal.onClose} disabled={loading}  >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={loading}  >Continuar</Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+    title="Adicionar Loja"
+    description="Adicione uma nova loja para administrar produtos e vendas."
+    isOpen={storeModal.isOpen}
+    onClose={storeModal.onClose}
+  >
+    <div>
+      <div className="">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input 
+                      disabled={loading} 
+                      placeholder="Introduza o nome aqui..." 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="mt-6 space-x-2 flex items-center justify-end w-full">
+                <Button variant={"outline"} disabled={loading} onClick={storeModal.onClose}>Cancelar</Button>
+                <Button variant={"default"} disabled={loading} type="submit">Continuar</Button>
+            </div>
+          </form>
+        </Form>
       </div>
-    </Modal>
+    </div>
+  </Modal>
   );
 };
